@@ -1,15 +1,15 @@
 import os
 import subprocess
 import tempfile
-
 from pathlib import Path
+from unittest import mock
 
 import pytest
-
 from click.testing import CliRunner
 
 from shiv.cli import main
-from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS, NO_OUTFILE, BLACKLISTED_ARGS
+from shiv.constants import (BLACKLISTED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE,
+                            NO_PIP_ARGS)
 
 
 def strip_header(output):
@@ -61,3 +61,23 @@ class TestCLI:
             # now run the produced zipapp
             with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
                 assert proc.stdout.read().decode() == "hello world" + os.linesep
+
+    @mock.patch('shiv.cli.pip')     # just to speedup tests
+    def test_no_compile_pyc(self, mock_pip,
+                            runner, tmpdir, package_location):
+        import json
+        with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
+            output_file = Path(tmpdir, 'test.pyz')
+
+            with mock.patch('shiv.cli.Path.write_text') as mock_write_text, \
+                    mock.patch('shiv.cli.uuid.uuid4') as mock_uuid4:
+                mock_uuid4.return_value = 'foo'
+                runner(['--no-compile-pyc', '-o', str(output_file),
+                        str(package_location)])
+
+                mock_write_text.assert_called_with(json.dumps({
+                    "build_id": "foo",
+                    "always_write_cache": False,
+                    "compile_pyc": False,
+                    "entry_point": None
+                }))

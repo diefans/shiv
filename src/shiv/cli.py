@@ -71,6 +71,10 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
     default=True,
     help="Whether or not to compress your zip.",
 )
+@click.option(
+    "--compile-pyc/--no-compile-pyc", default=True,
+    help="Compile site packages when bootstrapping."
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -78,6 +82,7 @@ def main(
     console_script: Optional[str],
     python: Optional[str],
     compressed: bool,
+    compile_pyc: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -125,6 +130,7 @@ def main(
         env = Environment(
             build_id=str(uuid.uuid4()),
             entry_point=entry_point,
+            compile_pyc=compile_pyc,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())

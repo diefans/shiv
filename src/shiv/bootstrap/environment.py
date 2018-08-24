@@ -21,9 +21,11 @@ class Environment:
         build_id=None,
         entry_point=None,
         always_write_cache=False,
+        compile_pyc=True,
     ):
         self.build_id = build_id
         self.always_write_cache = always_write_cache
+        self.compile_pyc = compile_pyc
 
         # properties
         self._entry_point = entry_point
